@@ -1,0 +1,44 @@
+window.preguntar = async function () {
+  const input = document.getElementById("pregunta");
+  const chat = document.getElementById("chat");
+
+  const texto = input.value.trim();
+  if (!texto) return;
+
+  input.value = "";
+
+  // Mostrar pregunta en la interfaz
+  chat.innerHTML += <p><strong>Tú:</strong> ${texto}</p>;
+
+  // Estado pensando con ID único
+  const pensandoId = "pensando-" + Date.now();
+  chat.innerHTML += <p id="${pensandoId}"><strong>🤔 Yonimon:</strong> Está pensando...</p>;
+  chat.scrollTop = chat.scrollHeight;
+
+  try {
+    // LLAMAMOS A TU PROPIO ARCHIVO PHP EN LUGAR DE LA API DIRECTA
+    let respuestaServidor = await fetch('preguntar.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pregunta: texto })
+    });
+
+    let datos = await respuestaServidor.json();
+    
+    // Quitar el "Pensando..."
+    const pensandoElemento = document.getElementById(pensandoId);
+    if (pensandoElemento) pensandoElemento.remove();
+
+    // Formatear saltos de línea para HTML
+    const respuestaFormateada = datos.respuesta.replace(/\n/g, "<br>");
+    chat.innerHTML += <p><strong>🐱 Yonimon:</strong><br>${respuestaFormateada}</p><hr>;
+
+  } catch (error) {
+    console.error("Error:", error);
+    const pensandoElemento = document.getElementById(pensandoId);
+    if (pensandoElemento) pensandoElemento.remove();
+    chat.innerHTML += <p><strong>🐱 Yonimon:</strong> Hubo un error al conectar con el servidor. 😿</p><hr>;
+  }
+
+  chat.scrollTop = chat.scrollHeight;
+};
